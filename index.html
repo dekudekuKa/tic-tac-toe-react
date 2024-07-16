@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <title>Tic-Tac-Toe</title>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const symbolO = "O";
+        const symbolX = "X";
+
+        const CheckWinner = (cells) => {
+            const lines = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 4, 8],
+                [2, 4, 6],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8]
+            ];
+
+            for (let i = 0; i < lines.length; i++) {
+                const [a, b, c] = lines[i];
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    return [a, b, c];
+                }
+            }
+            return null;
+        }
+
+ 
+        function App() {
+            const emptyField = Array(9).fill(null);
+            const [cells, setCells] = React.useState(emptyField);
+            const [currentTurn, setCurrentTurn] = React.useState(symbolO);
+            const [winnerSequence, setWinnerSequence] = React.useState(null);
+
+            const RenderSymbol = (symbol) => <span className={`symbol ${GetSymbolName(symbol)}`}>{symbol}</span>;
+
+            const handleClick = (index) => {
+                if (cells[index] || winnerSequence) {
+                    return;
+                }
+                const cellsCopy = cells.slice();
+                cellsCopy[index] = currentTurn;
+
+                const winner = CheckWinner(cellsCopy);
+
+                setCells(cellsCopy);
+                setCurrentTurn(currentTurn === symbolO ? symbolX : symbolO);
+                setWinnerSequence(winner);
+            }
+
+            const startNewGame = () => {
+                setCells(emptyField);
+                setCurrentTurn(symbolO);
+                setWinnerSequence(null);
+            }
+
+            const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
+            const isDraw = !winnerSequence && cells.filter(value => value).length === 9;
+
+            return (
+                <div className="game">
+                    <GameInfo 
+                        isDraw={isDraw} 
+                            winnerSymbol={winnerSymbol} 
+                                currentTurn={currentTurn}
+                    />
+                    <div className="game-field">
+                        {cells.map((symbol, index) => (
+                                <GameCell symbol={symbol} 
+                                    isWinner={winnerSequence?.includes(index)} 
+                                    onClick={ () => handleClick(index)}
+                                />
+                        ))}
+                    </div>
+
+                    <button key="newGame" className="new-game" onClick={startNewGame}>
+                        New Game
+                    </button>
+                </div>
+            );
+        }
+
+        function GameInfo({ isDraw, winnerSymbol, currentTurn }) {
+            if (isDraw) {
+                return (
+                    <div className="game-info">
+                        Нічия
+                    </div>
+                )
+            }
+            if (winnerSymbol) {
+                return (
+                    <div className="game-info">
+                        Переможець<GameSymbol symbol={winnerSymbol}/>
+                    </div>
+                )
+            }
+
+            return (
+                <div className="game-info">
+                    Хід: <GameSymbol symbol={currentTurn}/>
+                </div>
+            )
+        }
+
+        function GameCell({ isWinner, onClick, symbol }) {
+            return (
+                <button 
+                    className={`cell ${isWinner ? 'cell-win' : ''}`} 
+                    onClick={onClick}
+                >
+                    {symbol ? RenderSymbol(symbol) : null}
+                </button>
+            );            
+        }
+
+        function GameSymbol({ symbol }) {
+            
+            const GetSymbolName = (symbol) => {
+                if (symbol === symbolO) return "symbol--o";
+                if (symbol === symbolX) return "symbol--x";
+                return ' ';
+            }
+
+            return <span className={`symbol ${GetSymbolName(symbol)}`}>{symbol}</span>;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App/>);
+    </script>
+</body>
+</html>
